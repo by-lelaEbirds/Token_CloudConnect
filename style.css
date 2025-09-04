@@ -60,6 +60,21 @@ body::before {
   padding: 0 32px;
 }
 .brand { font-weight: 700; font-size: 1.25rem; }
+
+/* Estilo para a logo */
+.app-logo {
+  height: 36px; /* Ajuste o tamanho conforme necessário */
+  width: auto;
+  filter: drop-shadow(0 2px 4px rgba(0, 82, 204, 0.2));
+  transition: filter 0.3s ease;
+}
+
+/* Ajuste para o tema dark na logo, se necessário */
+.dark .app-logo {
+  filter: drop-shadow(0 2px 4px rgba(66, 133, 244, 0.2));
+}
+
+
 .actions { display: flex; gap: 12px; align-items: center; }
 
 .wrap {
