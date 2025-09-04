@@ -1,66 +1,50 @@
-# ☁️ CloudConnect — Missão 5
+# CloudConnect — Missão 5 (Airtable CRUD)
 
-## 📌 Sobre o Projeto
-Um web app simples de **cadastro de clientes** com integração direta à **API do Airtable**.  
-Permite **Create, Read, Update e Delete (CRUD)** de registros, trabalhando conceitos de:
-- APIs REST (GET/POST/PATCH/DELETE)
-- Autenticação via Token (PAT)
-- JSON + Headers
-- Boas práticas de segurança
-- UX limpa e responsiva (design estilo Apple com glassmorphism)
+Projeto: cadastro simples de **Clientes** com persistência via **Airtable API**.
 
----
+## O que está incluso
+- `index.html` — interface (formulário + lista + modal de credenciais)
+- `style.css` — design Apple-inspired com glassmorphism (tema claro/escuro)
+- `app.js` — lógica: Create, Read, Delete (CRUD mínimo) + credenciais via modal/localStorage
+- `README.md` — este arquivo
 
-## 🚀 Funcionalidades
-✅ Listar clientes (GET)  
-✅ Adicionar clientes (POST)  
-✅ Editar clientes (PATCH)  
-✅ Excluir clientes (DELETE)  
-✅ Busca dinâmica (filterByFormula)  
-✅ Configuração segura via modal (localStorage)  
-✅ Estados de UI (carregando, vazio, erro)  
+## Como usar (local)
+1. Clone ou faça upload desses arquivos para o repositório GitHub (raiz do repo).
+2. Abra via servidor estático (recomendado):
+   ```bash
+   python -m http.server 5500
+   # e acesse http://localhost:5500
+   ```
+   Ou use Live Server (VS Code) / Replit.
 
----
+3. Clique em **⚙️ Credenciais** e cole:
+   - **Token** (PAT) — comece com `pat...` (gere em https://airtable.com/create/tokens)
+   - **Base ID** — (ex.: `appXXXXXXXXXXXX`) — veja em https://airtable.com/api
+   - **Table Name** — `Clientes` (padrão)
 
-## 🛠️ Tecnologias
-- HTML5, CSS3 (glassmorphism, responsivo)
-- JavaScript (fetch API, DOM, localStorage)
-- Airtable API (Base + Tabela)
+4. Salve e use o formulário para adicionar clientes. A lista será carregada da base Airtable.
 
----
+## Notas de segurança
+- **Não** coloque o token embutido no código em repositórios públicos. Use o modal local (o app salva em `localStorage`) ou um proxy server em backend para proteger o token.
+- Em entregas acadêmicas, use um token com escopo restrito à base criada.
 
-## ⚙️ Configuração
-1. Crie uma **Base** no Airtable chamada `DBX_CloudConnect` com a tabela `Clientes`:
-   - Campos: `nome`, `email`, `telefone`
-2. Gere um **PAT** (Token) no [Airtable Developer Hub](https://airtable.com/developers/web/api/introduction)
-3. Abra o app (`index.html`) no navegador
-4. Clique em **⚙️ Credenciais** e cole:
-   - Token (PAT)
-   - Base ID (ex.: `appXXXXXXXXXXXXXX`)
-   - Table Name (ex.: `Clientes`)
-5. Salve e pronto!
-
----
-
-## 📊 Fluxo de conexão
-```mermaid
-sequenceDiagram
-  participant User
-  participant Frontend
-  participant AirtableAPI
-
-  User->>Frontend: Preenche formulário
-  Frontend->>AirtableAPI: POST /clientes (nome, email, telefone)
-  AirtableAPI-->>Frontend: 200 Created (JSON)
-  Frontend-->>User: Atualiza tabela de clientes
+## Diagrama de sequência (simplificado)
+```
+Frontend (browser) -> Airtable API: GET /POST /DELETE (Authorization: Bearer pat...)
+Airtable -> Frontend: JSON (records)
 ```
 
+## O que foi entregue
+- UI com glassmorphism, bordas arredondadas e animações leves.
+- Create + Read + Delete funcionando.
+- Busca case-insensitive por nome (armazena `nome` em lowercase no Airtable para consistência).
+- Tema claro por padrão e modo escuro via botão.
+
+## Próximos passos (opcionais)
+- Implementar PATCH (edição inline/modal) — bônus.
+- Implementar proxy Node (.env) para esconder token (recomendado para produção).
+- Gerar GIF curto demonstrando o fluxo CRUD para anexar no repositório.
+
 ---
-
-## 📝 Reflexão
-> "Integrar uma API real me mostrou como o frontend se conecta ao mundo externo.  
-Aprendi sobre autenticação, tratamento de erros e como pequenas decisões de UX (exibir status, mensagens claras) tornam o app mais confiável e profissional."
-
----
-
-🎖 **Badge desbloqueado:** *Explorador de Nuvens*  
+Desconforto não é perigo.
+Isso é vida normal. O TOC quer exagero, mas eu sigo a razão.

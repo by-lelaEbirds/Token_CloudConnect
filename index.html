@@ -1,131 +1,62 @@
-// app.js
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CloudConnect — Clientes</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">CloudConnect</div>
+    <div class="actions">
+      <button id="themeToggle" class="btn ghost">🌓</button>
+      <button id="btnCred" class="btn">⚙️ Credenciais</button>
+    </div>
+  </header>
 
-// Utilitário para capitalizar nomes
-function capitalize(text) {
-  if (!text) return "";
-  return text.charAt(0).toUpperCase() + text.slice(1);
-}
+  <main class="wrap">
+    <section class="panel form-panel glass">
+      <h2>Cadastro de Cliente</h2>
+      <form id="formCliente" class="form">
+        <input id="nome" name="nome" type="text" placeholder="Nome" required />
+        <input id="telefone" name="telefone" type="text" placeholder="Telefone" required />
+        <input id="email" name="email" type="email" placeholder="Email" required />
+        <div class="row">
+          <button type="submit" class="btn primary">Adicionar</button>
+          <button type="button" id="limparBtn" class="btn ghost">Limpar</button>
+        </div>
+      </form>
+      <p class="hint">Os dados são gravados na sua base do Airtable. Não publique tokens em repositórios públicos.</p>
+    </section>
 
-// Recuperar credenciais do localStorage
-function getCredenciais() {
-  return {
-    token: localStorage.getItem("airtableToken") || "",
-    baseId: localStorage.getItem("airtableBaseId") || "",
-    table: localStorage.getItem("airtableTable") || "Clientes"
-  };
-}
+    <section class="panel list-panel glass">
+      <div class="list-header">
+        <h2>Clientes</h2>
+        <input id="busca" placeholder="🔍 Buscar por nome..." />
+      </div>
+      <div id="status" class="status">Aguardando credenciais...</div>
+      <ul id="lista" class="list"></ul>
+    </section>
+  </main>
 
-function salvarCredenciais(token, baseId, table) {
-  localStorage.setItem("airtableToken", token);
-  localStorage.setItem("airtableBaseId", baseId);
-  localStorage.setItem("airtableTable", table);
-}
+  <!-- Modal credenciais -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-body glass">
+      <h3>Configurar credenciais</h3>
+      <label>Token (PAT)<input id="tokenInput" placeholder="pat_xxx..." /></label>
+      <label>Base ID<input id="baseInput" placeholder="appXXXXXXXX" /></label>
+      <label>Table Name<input id="tableInput" value="Clientes" /></label>
+      <div class="row">
+        <button id="saveCred" class="btn primary">Salvar</button>
+        <button id="closeModal" class="btn ghost">Fechar</button>
+      </div>
+      <p class="small">Dica: gere o token em https://airtable.com/create/tokens e limite o escopo à sua base.</p>
+    </div>
+  </div>
 
-async function fetchClientes() {
-  const { token, baseId, table } = getCredenciais();
-  if (!token || !baseId || !table) return [];
+  <footer class="footer">Feat. glassmorphism · Design Apple-inspired</footer>
 
-  const url = `https://api.airtable.com/v0/${baseId}/${table}`;
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-  const data = await res.json();
-  return data.records.map(r => ({
-    id: r.id,
-    nome: r.fields.nome?.toLowerCase() || "",
-    telefone: r.fields.telefone || "",
-    email: r.fields.email || ""
-  }));
-}
-
-async function adicionarCliente(nome, telefone, email) {
-  const { token, baseId, table } = getCredenciais();
-  if (!token || !baseId || !table) return;
-
-  const url = `https://api.airtable.com/v0/${baseId}/${table}`;
-  await fetch(url, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      fields: { nome: nome.toLowerCase(), telefone, email }
-    })
-  });
-}
-
-async function renderClientes(filtro = "") {
-  const lista = document.getElementById("listaClientes");
-  lista.innerHTML = "<li>Carregando...</li>";
-
-  const clientes = await fetchClientes();
-  const filtrados = clientes.filter(c =>
-    c.nome.includes(filtro.toLowerCase())
-  );
-
-  if (filtrados.length === 0) {
-    lista.innerHTML = "<li>Nenhum cliente encontrado</li>";
-    return;
-  }
-
-  lista.innerHTML = filtrados
-    .map(
-      c => `
-      <li>
-        <strong>${capitalize(c.nome)}</strong><br />
-        📞 ${c.telefone}<br />
-        ✉️ ${c.email}
-      </li>`
-    )
-    .join("");
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("formCliente");
-  const busca = document.getElementById("busca");
-  const btnCredenciais = document.getElementById("btnCredenciais");
-  const modal = document.getElementById("modalCredenciais");
-  const salvarBtn = document.getElementById("salvarCredenciais");
-  const fecharBtn = document.getElementById("fecharModal");
-
-  // Render inicial
-  renderClientes();
-
-  // Adicionar cliente
-  form.addEventListener("submit", async e => {
-    e.preventDefault();
-    const nome = document.getElementById("nome").value;
-    const telefone = document.getElementById("telefone").value;
-    const email = document.getElementById("email").value;
-    await adicionarCliente(nome, telefone, email);
-    form.reset();
-    renderClientes();
-  });
-
-  // Busca dinâmica
-  busca.addEventListener("input", e => {
-    renderClientes(e.target.value);
-  });
-
-  // Modal credenciais
-  btnCredenciais.addEventListener("click", () => {
-    modal.classList.remove("hidden");
-    document.getElementById("tokenInput").value = localStorage.getItem("airtableToken") || "";
-    document.getElementById("baseIdInput").value = localStorage.getItem("airtableBaseId") || "";
-    document.getElementById("tableInput").value = localStorage.getItem("airtableTable") || "Clientes";
-  });
-
-  fecharBtn.addEventListener("click", () => {
-    modal.classList.add("hidden");
-  });
-
-  salvarBtn.addEventListener("click", () => {
-    const token = document.getElementById("tokenInput").value;
-    const baseId = document.getElementById("baseIdInput").value;
-    const table = document.getElementById("tableInput").value;
-    salvarCredenciais(token, baseId, table);
-    modal.classList.add("hidden");
-    renderClientes();
-  });
-});
+  <script src="app.js"></script>
+</body>
+</html>

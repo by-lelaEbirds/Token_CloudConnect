@@ -1,137 +1,133 @@
-const tableBody = document.querySelector("#clientesTable tbody");
-const statusDiv = document.getElementById("status");
-const searchInput = document.getElementById("search");
+// app.js - CloudConnect (Create + Read + Delete) using Airtable API (modal stores creds in localStorage)
+// Assumes table 'Clientes' with fields: nome, telefone, email (we store 'nome' in lowercase for consistency).
 
-function getCreds() {
+/* -------------------- Helpers -------------------- */
+const qs = sel => document.querySelector(sel);
+const qsa = sel => Array.from(document.querySelectorAll(sel));
+function show(el){ el.classList.remove('hidden'); }
+function hide(el){ el.classList.add('hidden'); }
+function ucFirst(text){ if(!text) return ''; return text.charAt(0).toUpperCase() + text.slice(1); }
+
+/* -------------------- Credentials -------------------- */
+function getCreds(){
   return {
-    pat: localStorage.getItem("pat") || "",
-    baseId: localStorage.getItem("baseId") || "",
-    tableName: localStorage.getItem("tableName") || ""
+    token: localStorage.getItem('airtable_token') || '',
+    base: localStorage.getItem('airtable_base') || '',
+    table: localStorage.getItem('airtable_table') || 'Clientes'
   };
 }
-
-async function fetchClientes() {
-  const { pat, baseId, tableName } = getCreds();
-  if (!pat || !baseId || !tableName) {
-    statusDiv.textContent = "⚠️ Configure as credenciais primeiro.";
-    return;
-  }
-  statusDiv.textContent = "⏳ Carregando...";
-  try {
-    const res = await fetch(`https://api.airtable.com/v0/${baseId}/${tableName}`, {
-      headers: { Authorization: `Bearer ${pat}` }
-    });
-    if (!res.ok) throw new Error("Erro ao buscar dados.");
-    const data = await res.json();
-    renderTable(data.records);
-  } catch (err) {
-    statusDiv.textContent = "❌ " + err.message;
-  }
+function saveCreds(token, base, table){
+  localStorage.setItem('airtable_token', token);
+  localStorage.setItem('airtable_base', base);
+  localStorage.setItem('airtable_table', table);
 }
 
-function renderTable(records) {
-  tableBody.innerHTML = "";
-  if (!records.length) {
-    statusDiv.textContent = "Nenhum registro encontrado.";
-    return;
-  }
-  statusDiv.textContent = "";
-  records.forEach(rec => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${rec.fields.nome || ""}</td>
-      <td>${rec.fields.email || ""}</td>
-      <td>${rec.fields.telefone || ""}</td>
-      <td class="actions">
-        <button onclick="editCliente('${rec.id}', '${rec.fields.nome || ""}', '${rec.fields.email || ""}', '${rec.fields.telefone || ""}')">✎</button>
-        <button onclick="deleteCliente('${rec.id}')">🗑</button>
-      </td>`;
-    tableBody.appendChild(tr);
+/* -------------------- UI -------------------- */
+const statusEl = qs('#status');
+const listaEl = qs('#lista');
+function setStatus(text){ statusEl.textContent = text; }
+
+/* -------------------- Airtable calls -------------------- */
+async function airtableFetchRecords(){
+  const { token, base, table } = getCreds();
+  if(!token || !base || !table){ throw { type:'NO_CREDENTIALS' }; }
+  const url = `https://api.airtable.com/v0/${base}/${encodeURIComponent(table)}`;
+  const res = await fetch(url, { headers: { Authorization:`Bearer ${token}` } });
+  if(!res.ok){ const j = await res.json().catch(()=>({})); throw { type:'API_ERROR', status: res.status, body: j }; }
+  const json = await res.json();
+  return json.records.map(r => ({ id: r.id, fields: r.fields }));
+}
+
+async function airtableCreateRecord({ nome, telefone, email }){
+  const { token, base, table } = getCreds();
+  const url = `https://api.airtable.com/v0/${base}/${encodeURIComponent(table)}`;
+  const body = { fields: { nome: String(nome).toLowerCase(), telefone, email } };
+  const res = await fetch(url, {
+    method: 'POST', headers: { Authorization:`Bearer ${token}`, 'Content-Type':'application/json' }, body: JSON.stringify(body)
   });
+  if(!res.ok){ const j = await res.json().catch(()=>({})); throw { type:'API_ERROR', status: res.status, body: j }; }
+  return await res.json();
 }
 
-document.getElementById("createForm").addEventListener("submit", async e => {
-  e.preventDefault();
-  const nome = document.getElementById("nome").value;
-  const email = document.getElementById("email").value;
-  const telefone = document.getElementById("telefone").value;
-  const { pat, baseId, tableName } = getCreds();
-  try {
-    const res = await fetch(`https://api.airtable.com/v0/${baseId}/${tableName}`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${pat}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ fields: { nome, email, telefone } })
-    });
-    if (!res.ok) throw new Error("Erro ao criar registro.");
-    fetchClientes();
-    e.target.reset();
-  } catch (err) {
-    alert(err.message);
+async function airtableDeleteRecord(id){
+  const { token, base, table } = getCreds();
+  const url = `https://api.airtable.com/v0/${base}/${encodeURIComponent(table)}/${id}`;
+  const res = await fetch(url, { method:'DELETE', headers: { Authorization:`Bearer ${token}` } });
+  if(!res.ok){ const j = await res.json().catch(()=>({})); throw { type:'API_ERROR', status: res.status, body: j }; }
+  return await res.json();
+}
+
+/* -------------------- Render -------------------- */
+async function renderAll(filter=''){
+  listaEl.innerHTML = '';
+  try{
+    setStatus('Carregando...');
+    const records = await airtableFetchRecords();
+    if(records.length === 0){ setStatus('Nenhum registro encontrado.'); return; }
+    // filter by nome (case-insensitive) - note 'nome' stored lower-case in fields
+    const filtered = records.filter(r => String(r.fields.nome || '').toLowerCase().includes(filter.toLowerCase()));
+    if(filtered.length === 0){ setStatus('Nenhum cliente encontrado.'); return; }
+    setStatus('');
+    listaEl.innerHTML = filtered.map(r => renderItem(r)).join('\n');
+    // attach delete listeners
+    qsa('.btn-delete').forEach(btn => btn.addEventListener('click', async (e)=>{
+      const id = btn.dataset.id;
+      if(!confirm('Excluir este cliente?')) return;
+      try{ setStatus('Excluindo...'); await airtableDeleteRecord(id); await refresh(); }catch(err){ handleError(err); }
+    }));
+  }catch(err){ handleError(err); }
+}
+
+function renderItem(r){
+  const nome = ucFirst(String(r.fields.nome || ''));
+  const telefone = r.fields.telefone || '';
+  const email = r.fields.email || '';
+  return `
+  <li>
+    <div class="info">
+      <div class="name">${nome}</div>
+      <div class="meta">${telefone} · ${email}</div>
+    </div>
+    <div class="controls">
+      <button class="btn ghost btn-delete" data-id="${r.id}" title="Excluir">🗑️</button>
+    </div>
+  </li>`;
+}
+
+/* -------------------- Helpers & lifecycle -------------------- */
+async function refresh(filter=''){ try{ await renderAll(filter); }catch(e){ console.error(e); } }
+
+function handleError(err){
+  console.error('Erro:', err);
+  if(err && err.type === 'NO_CREDENTIALS'){ setStatus('Insira Token, Base ID e Table no modal de credenciais.'); return; }
+  if(err && err.type === 'API_ERROR'){
+    const msg = err.body && err.body.error ? (err.body.error.message || JSON.stringify(err.body)) : JSON.stringify(err.body || err);
+    setStatus(`Erro da API (${err.status}): ${msg}`);
+    return;
   }
+  setStatus('Erro desconhecido. Veja o console para mais detalhes.');
+}
+
+/* -------------------- Wiring UI -------------------- */
+document.addEventListener('DOMContentLoaded', ()=>{
+  const form = qs('#formCliente'); const busca = qs('#busca'); const btnCred = qs('#btnCred'); const modal = qs('#modal'); const saveCred = qs('#saveCred'); const closeModal = qs('#closeModal'); const tokenInput = qs('#tokenInput'); const baseInput = qs('#baseInput'); const tableInput = qs('#tableInput'); const limparBtn = qs('#limparBtn'); const themeToggle = qs('#themeToggle');
+
+  // prefill modal with stored creds
+  const creds = getCreds(); tokenInput.value = creds.token; baseInput.value = creds.base; tableInput.value = creds.table;
+
+  btnCred.addEventListener('click', ()=> modal.classList.remove('hidden')); closeModal.addEventListener('click', ()=> modal.classList.add('hidden'));
+
+  saveCred.addEventListener('click', ()=>{ saveCreds(tokenInput.value.trim(), baseInput.value.trim(), tableInput.value.trim() || 'Clientes'); modal.classList.add('hidden'); setStatus('Credenciais salvas. Carregando...'); refresh(); });
+
+  form.addEventListener('submit', async (e)=>{ e.preventDefault(); const nome = qs('#nome').value.trim(); const telefone = qs('#telefone').value.trim(); const email = qs('#email').value.trim(); if(!nome||!telefone||!email){ alert('Preencha todos os campos'); return; } try{ setStatus('Enviando...'); await airtableCreateRecord({nome, telefone, email}); form.reset(); await refresh(); }catch(err){ handleError(err); } });
+
+  limparBtn.addEventListener('click', ()=> form.reset());
+
+  busca.addEventListener('input', (e)=> refresh(e.target.value));
+
+  // theme toggle
+  themeToggle.addEventListener('click', ()=>{ document.documentElement.classList.toggle('dark'); });
+
+  // initial attempt to render (will prompt for creds if missing)
+  refresh();
 });
-
-async function deleteCliente(id) {
-  const { pat, baseId, tableName } = getCreds();
-  try {
-    const res = await fetch(`https://api.airtable.com/v0/${baseId}/${tableName}/${id}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${pat}` }
-    });
-    if (!res.ok) throw new Error("Erro ao excluir.");
-    fetchClientes();
-  } catch (err) {
-    alert(err.message);
-  }
-}
-
-async function editCliente(id, nome, email, telefone) {
-  const newNome = prompt("Novo nome:", nome);
-  const newEmail = prompt("Novo email:", email);
-  const newTelefone = prompt("Novo telefone:", telefone);
-  const { pat, baseId, tableName } = getCreds();
-  try {
-    const res = await fetch(`https://api.airtable.com/v0/${baseId}/${tableName}/${id}`, {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${pat}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ fields: { nome: newNome, email: newEmail, telefone: newTelefone } })
-    });
-    if (!res.ok) throw new Error("Erro ao editar.");
-    fetchClientes();
-  } catch (err) {
-    alert(err.message);
-  }
-}
-
-// Modal credenciais
-const modal = document.getElementById("credModal");
-document.getElementById("credBtn").onclick = () => modal.style.display = "block";
-document.querySelector(".close").onclick = () => modal.style.display = "none";
-document.getElementById("saveCreds").onclick = () => {
-  localStorage.setItem("pat", document.getElementById("pat").value);
-  localStorage.setItem("baseId", document.getElementById("baseId").value);
-  localStorage.setItem("tableName", document.getElementById("tableName").value);
-  modal.style.display = "none";
-  fetchClientes();
-};
-
-searchInput.addEventListener("input", async () => {
-  const term = searchInput.value.toLowerCase();
-  const { pat, baseId, tableName } = getCreds();
-  try {
-    const res = await fetch(`https://api.airtable.com/v0/${baseId}/${tableName}?filterByFormula=SEARCH('${term}', nome)`, {
-      headers: { Authorization: `Bearer ${pat}` }
-    });
-    const data = await res.json();
-    renderTable(data.records);
-  } catch (err) {
-    console.error(err);
-  }
-});
-
-window.onload = fetchClientes;
