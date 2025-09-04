@@ -10,8 +10,13 @@
   <header class="topbar">
     <div class="brand">CloudConnect</div>
     <div class="actions">
-      <button id="themeToggle" class="btn ghost">🌓</button>
-      <button id="btnCred" class="btn">⚙️ Credenciais</button>
+      <button id="themeToggle" class="btn ghost">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+      <button id="btnCred" class="btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+        Credenciais
+      </button>
     </div>
   </header>
 
@@ -27,7 +32,7 @@
           <button type="button" id="limparBtn" class="btn ghost">Limpar</button>
         </div>
       </form>
-      <p class="hint">Os dados são gravados na sua base do Airtable. Não publique tokens em repositórios públicos.</p>
+      <p class="hint">Os dados são gravados na sua base do Airtable.</p>
     </section>
 
     <section class="panel list-panel glass">
@@ -40,7 +45,6 @@
     </section>
   </main>
 
-  <!-- Modal credenciais -->
   <div id="modal" class="modal hidden">
     <div class="modal-body glass">
       <h3>Configurar credenciais</h3>
@@ -51,7 +55,7 @@
         <button id="saveCred" class="btn primary">Salvar</button>
         <button id="closeModal" class="btn ghost">Fechar</button>
       </div>
-      <p class="small">Dica: gere o token em https://airtable.com/create/tokens e limite o escopo à sua base.</p>
+      <p class="small">Dica: gere o token em https://airtable.com/create/tokens.</p>
     </div>
   </div>
 
