@@ -7,11 +7,14 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div class="bg-wrap">
+    <div class="blob b1"></div>
+    <div class="blob b2"></div>
+    <div class="blob b3"></div>
+  </div>
+
   <header class="topbar">
-    <div class="brand">
-      <img src="logo.png" alt="CloudConnect Logo" class="app-logo" />
-    </div>
-    <div class="actions">
+    <div class="brand-placeholder"></div> <div class="actions">
       <button id="themeToggle" class="btn ghost" title="Alternar tema">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
       </button>
@@ -23,8 +26,11 @@
   </header>
 
   <main class="wrap">
-    <section class="panel form-panel">
-      <h2>Novo Cliente</h2>
+    <section class="panel form-panel glass">
+      <img src="logo.png" alt="CloudConnect Logo" class="app-logo" />
+      <h2 class="title">Painel de Clientes</h2>
+      <p class="subtitle">Adicione, busque e gerencie seus contatos.</p>
+
       <form id="formCliente" class="form">
         <input id="nome" name="nome" type="text" placeholder="Nome completo" required />
         <input id="telefone" name="telefone" type="text" placeholder="Telefone" required />
@@ -34,12 +40,11 @@
           <button type="button" id="limparBtn" class="btn ghost">Limpar</button>
         </div>
       </form>
-      <p class="hint">Os dados são gravados de forma segura na sua base do Airtable.</p>
     </section>
 
-    <section class="panel list-panel">
+    <section class="panel list-panel glass">
       <div class="list-header">
-        <h2>Clientes</h2>
+        <h2>Clientes Ativos</h2>
         <input id="busca" placeholder="Buscar por nome..." />
       </div>
       <div id="status" class="status"></div>
@@ -48,8 +53,8 @@
   </main>
 
   <div id="modal" class="modal hidden">
-    <div class="modal-body">
-      <h2>Configurar Credenciais</h2>
+    <div class="modal-body glass">
+      <h2 class="title">Configurar Credenciais</h2>
       <form>
         <label>Personal Access Token (PAT)</label>
         <input id="tokenInput" type="password" placeholder="pat_xxx..." />
@@ -59,13 +64,11 @@
         <input id="tableInput" value="Clientes" />
       </form>
       <div class="row">
-        <button id="saveCred" class="btn primary">Salvar</button>
+        <button id="saveCred" class="btn primary">Salvar Credenciais</button>
         <button id="closeModal" class="btn ghost">Fechar</button>
       </div>
     </div>
   </div>
-
-  <footer class="footer">CloudConnect — Um projeto de CRUD moderno com Airtable API</footer>
 
   <script src="app.js"></script>
 </body>
