@@ -1,57 +1,131 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CloudConnect - Airtable CRUD</title>
-  <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
-  <header class="header">
-    <h1>☁️ CloudConnect</h1>
-    <button id="credBtn">⚙️ Credenciais</button>
-  </header>
+// app.js
 
-  <main>
-    <section class="form-section">
-      <h2>Cadastrar Cliente</h2>
-      <form id="createForm">
-        <input type="text" id="nome" placeholder="Nome" required>
-        <input type="email" id="email" placeholder="Email" required>
-        <input type="text" id="telefone" placeholder="Telefone" required>
-        <button type="submit">Cadastrar</button>
-      </form>
-    </section>
+// Utilitário para capitalizar nomes
+function capitalize(text) {
+  if (!text) return "";
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
 
-    <section class="list-section">
-      <h2>Lista de Clientes</h2>
-      <input type="text" id="search" placeholder="Buscar por nome...">
-      <div id="status"></div>
-      <table id="clientesTable">
-        <thead>
-          <tr><th>Nome</th><th>Email</th><th>Telefone</th><th>Ações</th></tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </section>
-  </main>
+// Recuperar credenciais do localStorage
+function getCredenciais() {
+  return {
+    token: localStorage.getItem("airtableToken") || "",
+    baseId: localStorage.getItem("airtableBaseId") || "",
+    table: localStorage.getItem("airtableTable") || "Clientes"
+  };
+}
 
-  <!-- Modal credenciais -->
-  <div id="credModal" class="modal">
-    <div class="modal-content">
-      <span class="close">&times;</span>
-      <h2>Configurar Credenciais</h2>
-      <input type="text" id="pat" placeholder="Token (PAT)">
-      <input type="text" id="baseId" placeholder="Base ID">
-      <input type="text" id="tableName" placeholder="Table Name">
-      <button id="saveCreds">Salvar</button>
-    </div>
-  </div>
+function salvarCredenciais(token, baseId, table) {
+  localStorage.setItem("airtableToken", token);
+  localStorage.setItem("airtableBaseId", baseId);
+  localStorage.setItem("airtableTable", table);
+}
 
-  <footer>
-    <small>Missão 5 — CloudConnect • Feito com ❤️</small>
-  </footer>
+async function fetchClientes() {
+  const { token, baseId, table } = getCredenciais();
+  if (!token || !baseId || !table) return [];
 
-  <script src="js/app.js"></script>
-</body>
-</html>
+  const url = `https://api.airtable.com/v0/${baseId}/${table}`;
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  const data = await res.json();
+  return data.records.map(r => ({
+    id: r.id,
+    nome: r.fields.nome?.toLowerCase() || "",
+    telefone: r.fields.telefone || "",
+    email: r.fields.email || ""
+  }));
+}
+
+async function adicionarCliente(nome, telefone, email) {
+  const { token, baseId, table } = getCredenciais();
+  if (!token || !baseId || !table) return;
+
+  const url = `https://api.airtable.com/v0/${baseId}/${table}`;
+  await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      fields: { nome: nome.toLowerCase(), telefone, email }
+    })
+  });
+}
+
+async function renderClientes(filtro = "") {
+  const lista = document.getElementById("listaClientes");
+  lista.innerHTML = "<li>Carregando...</li>";
+
+  const clientes = await fetchClientes();
+  const filtrados = clientes.filter(c =>
+    c.nome.includes(filtro.toLowerCase())
+  );
+
+  if (filtrados.length === 0) {
+    lista.innerHTML = "<li>Nenhum cliente encontrado</li>";
+    return;
+  }
+
+  lista.innerHTML = filtrados
+    .map(
+      c => `
+      <li>
+        <strong>${capitalize(c.nome)}</strong><br />
+        📞 ${c.telefone}<br />
+        ✉️ ${c.email}
+      </li>`
+    )
+    .join("");
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("formCliente");
+  const busca = document.getElementById("busca");
+  const btnCredenciais = document.getElementById("btnCredenciais");
+  const modal = document.getElementById("modalCredenciais");
+  const salvarBtn = document.getElementById("salvarCredenciais");
+  const fecharBtn = document.getElementById("fecharModal");
+
+  // Render inicial
+  renderClientes();
+
+  // Adicionar cliente
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    const nome = document.getElementById("nome").value;
+    const telefone = document.getElementById("telefone").value;
+    const email = document.getElementById("email").value;
+    await adicionarCliente(nome, telefone, email);
+    form.reset();
+    renderClientes();
+  });
+
+  // Busca dinâmica
+  busca.addEventListener("input", e => {
+    renderClientes(e.target.value);
+  });
+
+  // Modal credenciais
+  btnCredenciais.addEventListener("click", () => {
+    modal.classList.remove("hidden");
+    document.getElementById("tokenInput").value = localStorage.getItem("airtableToken") || "";
+    document.getElementById("baseIdInput").value = localStorage.getItem("airtableBaseId") || "";
+    document.getElementById("tableInput").value = localStorage.getItem("airtableTable") || "Clientes";
+  });
+
+  fecharBtn.addEventListener("click", () => {
+    modal.classList.add("hidden");
+  });
+
+  salvarBtn.addEventListener("click", () => {
+    const token = document.getElementById("tokenInput").value;
+    const baseId = document.getElementById("baseIdInput").value;
+    const table = document.getElementById("tableInput").value;
+    salvarCredenciais(token, baseId, table);
+    modal.classList.add("hidden");
+    renderClientes();
+  });
+});
