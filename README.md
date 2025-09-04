@@ -36,7 +36,7 @@ O fluxo completo de CRUD (criar, ler, buscar e deletar um cliente) em ação:
   <img src="demo.gif" alt="Demonstração do App CloudConnect" width="800"/>
 </p>
 
-**[➡️ Link para o App Publicado](SEU_LINK_AQUI)**
+**[➡️ Link para o App Publicado](COLAR DEPOIS QUE EU TERMINAR)**
 
 ## 🛠️ Tecnologias Utilizadas
 
@@ -81,7 +81,7 @@ Siga os passos abaixo para configurar e executar o projeto em sua máquina local
 
 1.  **Clone o repositório:**
     ```bash
-    git clone SEU_LINK_DO_REPOSITORIO.git
+    git clone https://github.com/by-lelaEbirds/Token_CloudConnect
     ```
 2.  **Navegue até a pasta do projeto:**
     ```bash
