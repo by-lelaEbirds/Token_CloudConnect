@@ -58,25 +58,36 @@ async function airtableDeleteRecord(id){
 }
 
 /* -------------------- Render -------------------- */
-async function renderAll(filter=''){
-  listaEl.innerHTML = '';
-  try{
-    setStatus('Carregando...');
+async function renderAll(filter = '') {
+  listaEl.innerHTML = ''; // Limpa a lista atual
+  setStatus('Carregando...');
+  
+  // Mostra 3 skeletons enquanto carrega
+  listaEl.innerHTML = Array(3).fill('').map(renderSkeletonItem).join('\n');
+
+  try {
     const records = await airtableFetchRecords();
-    if(records.length === 0){ setStatus('Nenhum registro encontrado.'); return; }
-    // filter by nome (case-insensitive) - note 'nome' stored lower-case in fields
+    listaEl.innerHTML = ''; // Limpa os skeletons
+    if (records.length === 0) { setStatus('Nenhum registro encontrado.'); return; }
+    
     const filtered = records.filter(r => String(r.fields.nome || '').toLowerCase().includes(filter.toLowerCase()));
-    if(filtered.length === 0){ setStatus('Nenhum cliente encontrado.'); return; }
+    if (filtered.length === 0) { setStatus('Nenhum cliente encontrado na busca.'); return; }
+    
     setStatus('');
     listaEl.innerHTML = filtered.map(r => renderItem(r)).join('\n');
-    // attach delete listeners
-    qsa('.btn-delete').forEach(btn => btn.addEventListener('click', async (e)=>{
-      const id = btn.dataset.id;
-      if(!confirm('Excluir este cliente?')) return;
-      try{ setStatus('Excluindo...'); await airtableDeleteRecord(id); await refresh(); }catch(err){ handleError(err); }
+    
+    qsa('.btn-delete').forEach(btn => btn.addEventListener('click', async (e) => {
+      // Usamos currentTarget para garantir que pegamos o botão, mesmo se o clique for no SVG interno
+      const id = e.currentTarget.dataset.id; 
+      if (!confirm('Excluir este cliente?')) return;
+      try { setStatus('Excluindo...'); await airtableDeleteRecord(id); await refresh(); } catch(err) { handleError(err); }
     }));
-  }catch(err){ handleError(err); }
+  } catch(err) {
+    listaEl.innerHTML = ''; // Limpa os skeletons em caso de erro
+    handleError(err);
+  }
 }
+
 
 function renderItem(r){
   const nome = ucFirst(String(r.fields.nome || ''));
@@ -89,8 +100,21 @@ function renderItem(r){
       <div class="meta">${telefone} · ${email}</div>
     </div>
     <div class="controls">
-      <button class="btn ghost btn-delete" data-id="${r.id}" title="Excluir">🗑️</button>
+      <button class="btn ghost btn-delete" data-id="${r.id}" title="Excluir">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+      </button>
     </div>
+  </li>`;
+}
+
+function renderSkeletonItem(){
+  return `
+  <li class="skeleton">
+    <div class="info">
+      <div class="name"></div>
+      <div class="meta"></div>
+    </div>
+    <div class="controls"></div>
   </li>`;
 }
 
@@ -119,7 +143,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
   saveCred.addEventListener('click', ()=>{ saveCreds(tokenInput.value.trim(), baseInput.value.trim(), tableInput.value.trim() || 'Clientes'); modal.classList.add('hidden'); setStatus('Credenciais salvas. Carregando...'); refresh(); });
 
-  form.addEventListener('submit', async (e)=>{ e.preventDefault(); const nome = qs('#nome').value.trim(); const telefone = qs('#telefone').value.trim(); const email = qs('#email').value.trim(); if(!nome||!telefone||!email){ alert('Preencha todos os campos'); return; } try{ setStatus('Enviando...'); await airtableCreateRecord({nome, telefone, email}); form.reset(); await refresh(); }catch(err){ handleError(err); } });
+  form.addEventListener('submit', async (e)=>{ e.preventDefault(); const nome = qs('#nome').value.trim(); const telefone = qs('#telefone').value.trim(); const email = qs('#email').value.trim(); if(!nome||!telefone||!email){ alert('Preencha todos os campos'); return; } try{ setStatus('Enviando...'); await airtableCreateRecord({nome, telefone, email}); form.reset(); qs('#nome').focus(); await refresh(); }catch(err){ handleError(err); } });
 
   limparBtn.addEventListener('click', ()=> form.reset());
 
