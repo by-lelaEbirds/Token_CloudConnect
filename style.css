@@ -82,7 +82,7 @@ body {
 
 /* --- Logo e Títulos --- */
 .app-logo {
-  width: 160px; /* Tamanho ampliado */
+  width: 160px;
   height: auto;
   margin-inline: auto;
   display: block;
@@ -165,6 +165,7 @@ body {
 .name { font-weight: 600; }
 .meta { font-size: 0.9rem; color: var(--muted); }
 .status { padding: 40px 12px; color: var(--muted); text-align: center; }
+.controls { display: flex; gap: 8px; }
 
 /* --- Modal --- */
 .modal {
