@@ -14,9 +14,10 @@
   </div>
 
   <header class="topbar">
-    <div class="brand-placeholder"></div> <div class="actions">
+    <div class="brand-placeholder"></div>
+    <div class="actions">
       <button id="themeToggle" class="btn ghost" title="Alternar tema">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        <svg xmlns="http://www.w.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
       </button>
       <button id="btnCred" class="btn primary">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
@@ -30,7 +31,6 @@
       <img src="logo.png" alt="CloudConnect Logo" class="app-logo" />
       <h2 class="title">Painel de Clientes</h2>
       <p class="subtitle">Adicione, busque e gerencie seus contatos.</p>
-
       <form id="formCliente" class="form">
         <input id="nome" name="nome" type="text" placeholder="Nome completo" required />
         <input id="telefone" name="telefone" type="text" placeholder="Telefone" required />
@@ -66,6 +66,25 @@
       <div class="row">
         <button id="saveCred" class="btn primary">Salvar Credenciais</button>
         <button id="closeModal" class="btn ghost">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="editModal" class="modal hidden">
+    <div class="modal-body glass">
+      <h2 class="title">Editar Cliente</h2>
+      <form id="formEdit">
+        <input type="hidden" id="editId" />
+        <label>Nome</label>
+        <input id="editNome" type="text" required />
+        <label>Telefone</label>
+        <input id="editTelefone" type="text" required />
+        <label>Email</label>
+        <input id="editEmail" type="email" required />
+      </form>
+      <div class="row">
+        <button id="saveEdit" class="btn primary">Salvar Alterações</button>
+        <button id="closeEditModal" class="btn ghost">Cancelar</button>
       </div>
     </div>
   </div>
