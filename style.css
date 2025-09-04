@@ -56,14 +56,17 @@ body::before {
 }
 
 .topbar {
-  height: 72px; display: flex; align-items: center; justify-content: space-between;
+  height: 80px; /* Aumentado para comportar a nova logo */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 0 32px;
 }
 .brand { font-weight: 700; font-size: 1.25rem; }
 
 /* Estilo para a logo */
 .app-logo {
-  height: 36px; /* Ajuste o tamanho conforme necessário */
+  height: 48px; /* AUMENTADO para maior destaque */
   width: auto;
   filter: drop-shadow(0 2px 4px rgba(0, 82, 204, 0.2));
   transition: filter 0.3s ease;
